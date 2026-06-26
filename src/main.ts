@@ -106,6 +106,10 @@ class SphericalSweeper {
     this.camera.lowerRadiusLimit = 4;
     this.camera.upperRadiusLimit = 12;
 
+    // Allow free 360° vertical rotation (remove pole clamping)
+    this.camera.lowerBetaLimit = null;
+    this.camera.upperBetaLimit = null;
+
     // Configure global ambient lighting
     this.scene.ambientColor = new Color3(1, 1, 1);
     
