@@ -156,8 +156,8 @@ class SphericalSweeper {
 
     // Revealed: Matte Slate blue-gray
     this.revealedMat = new StandardMaterial('revealedMat', this.scene);
-    this.revealedMat.diffuseColor = new Color3(0.12, 0.16, 0.24);
-    this.revealedMat.ambientColor = new Color3(0.12, 0.16, 0.24);
+    this.revealedMat.diffuseColor = new Color3(0.12, 0.86, 0.24);
+    this.revealedMat.ambientColor = new Color3(0.12, 0.86, 0.24);
     this.revealedMat.specularColor = new Color3(0, 0, 0);
     this.revealedMat.emissiveColor = new Color3(0, 0, 0);
 
@@ -391,8 +391,7 @@ class SphericalSweeper {
     this.revealedCount++;
 
     if (cell.mesh) {
-      cell.mesh.scaling.setAll(0.96); // Push down when clicked
-
+      // cell.mesh.scaling.setAll(0.96); // Push down when clicked
       if (cell.isMine) {
         cell.mesh.material = this.mineMat;
         this.endGame(false);
