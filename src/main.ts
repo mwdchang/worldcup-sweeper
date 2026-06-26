@@ -5,7 +5,7 @@ import {
   ArcRotateCamera,
   Vector3,
   HemisphericLight,
-  PointLight,
+  // PointLight,
   MeshBuilder,
   StandardMaterial,
   Color3,
@@ -39,7 +39,7 @@ class SphericalSweeper {
 
   // Game Settings
   private hexagonCount = 80;
-  private totalCells = 92; // 12 pentagons + H hexagons
+  // private totalCells = 92; // 12 pentagons + H hexagons
   private mineCount = 15;
   private cells: VoronoiCell[] = [];
   private gameOver = false;
@@ -195,7 +195,7 @@ class SphericalSweeper {
     clearInterval(this.timerInterval);
 
     // Determine mine density (approx 18% of playable cells)
-    this.totalCells = 12 + this.hexagonCount;
+    // this.totalCells = 12 + this.hexagonCount;
     this.mineCount = Math.max(3, Math.floor(this.hexagonCount * 0.18));
     // TODO: Testing
     this.mineCount = 2;
