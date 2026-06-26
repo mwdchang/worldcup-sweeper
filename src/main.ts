@@ -393,7 +393,7 @@ class SphericalSweeper {
     if (cell.mesh) {
       if (cell.isFlagged) {
         cell.mesh.material = this.flaggedMat;
-        cell.mesh.scaling.setAll(1.05); // Pop out slightly when flagged
+        cell.mesh.scaling.setAll(1.0);
       } else {
         cell.mesh.material = cell.material!;
         cell.mesh.scaling.setAll(1.0);
