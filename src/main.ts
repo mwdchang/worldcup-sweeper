@@ -12,6 +12,7 @@ import {
   Mesh,
   PointerEventTypes,
   VertexData,
+  DynamicTexture,
 } from '@babylonjs/core';
 import { BallGrids } from './ball';
 
@@ -45,6 +46,7 @@ class SphericalSweeper {
   private revealedCount = 0;
   private timeElapsed = 0;
   private timerInterval?: number;
+  private endInterval?: number;
 
   // DOM Elements
   private sizeSelect!: HTMLSelectElement;
@@ -167,12 +169,21 @@ class SphericalSweeper {
 
     // Number indicator colors
     this.textColors = [
+      new Color3(0.2, 0.1, 0.2), // 1: Blue
+      new Color3(0.2, 0.1, 0.2), // 2: Green
+      new Color3(0.2, 0.1, 0.2), // 3: Red
+      new Color3(0.2, 0.1, 0.2), // 4: Purple
+      new Color3(0.2, 0.1, 0.2), // 5: Yellow
+      new Color3(0.2, 0.1, 0.2), // 6: Cyan
+
+      /*
       new Color3(0.2, 0.6, 1.0), // 1: Blue
       new Color3(0.2, 0.8, 0.3), // 2: Green
       new Color3(1.0, 0.3, 0.3), // 3: Red
       new Color3(0.8, 0.3, 1.0), // 4: Purple
       new Color3(1.0, 0.7, 0.1), // 5: Yellow
       new Color3(0.1, 0.9, 0.9), // 6: Cyan
+      */
     ];
   }
 
@@ -186,6 +197,8 @@ class SphericalSweeper {
     // Determine mine density (approx 18% of playable cells)
     this.totalCells = 12 + this.hexagonCount;
     this.mineCount = Math.max(3, Math.floor(this.hexagonCount * 0.18));
+    // TODO: Testing
+    this.mineCount = 2;
     this.mineCountEl.textContent = String(this.mineCount);
 
     // Clean up old meshes
@@ -404,19 +417,38 @@ class SphericalSweeper {
 
       cell.mesh.material = this.revealedMat;
 
-      // Add number indicators on the sphere surface
+      // Add number indicators on the sphere surface as text
       if (cell.neighborMines > 0) {
         const color = this.textColors[Math.min(cell.neighborMines - 1, this.textColors.length - 1)];
-        const indicator = MeshBuilder.CreateSphere(`ind_${cell.index}`, { diameter: 0.15 }, this.scene);
-        indicator.position = cell.center.scale(2.05);
+
+        // Render the number onto a dynamic texture
+        const dynTex = new DynamicTexture(`textTex_${cell.index}`, { width: 128, height: 128 }, this.scene, false);
+        dynTex.hasAlpha = true;
+        dynTex.drawText(
+          String(cell.neighborMines),
+          null, null,
+          'bold 80px sans-serif',
+          color.toHexString(),
+          'transparent',
+          true
+        );
+
+        // Small plane floating just above the patch, oriented to face outward
+        const indicator = MeshBuilder.CreatePlane(`ind_${cell.index}`, { size: 0.28 }, this.scene);
+        indicator.position = cell.center.scale(2.09);
+        indicator.billboardMode = Mesh.BILLBOARDMODE_ALL;
+
+        // lookAt a point further out along the cell normal so the +Z face points outward
+        // indicator.lookAt(cell.center.scale(100));
         indicator.parent = this.ballContainer;
         indicator.isPickable = false;
 
         const indMat = new StandardMaterial(`indMat_${cell.index}`, this.scene);
-        indMat.diffuseColor = color;
-        indMat.ambientColor = color;
-        indMat.specularColor = new Color3(0, 0, 0);
-        indMat.emissiveColor = new Color3(0, 0, 0);
+        indMat.diffuseTexture = dynTex;
+        indMat.emissiveColor = Color3.White();
+        indMat.specularColor = Color3.Black();
+        indMat.useAlphaFromDiffuseTexture = true;
+        indMat.backFaceCulling = false;
         indicator.material = indMat;
       }
     }
@@ -447,15 +479,18 @@ class SphericalSweeper {
     this.cells.forEach((cell) => {
       if (cell.isMine && cell.mesh) {
         cell.mesh.material = win ? this.flaggedMat : this.mineMat;
-        cell.mesh.scaling.setAll(1.1);
       }
     });
 
-    setTimeout(() => {
+    if (this.endInterval) {
+      clearInterval(this.endInterval);
+    }
+
+    this.endInterval = setTimeout(() => {
       alert(
         win
-          ? '🏆 WORLD CUP WINNER! You swept the ball safely!'
-          : '💥 RED CARD! You hit a soccer mine.'
+          ? 'Winner! You swept the ball safely!'
+          : 'Red Card! You hit a soccer mine.'
       );
     }, 200);
   }

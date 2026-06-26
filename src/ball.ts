@@ -8,6 +8,7 @@ export interface PrecalculatedCell {
 }
 
 export const BallGrids: Record<number, PrecalculatedCell[]> = {
+  /*
   20: [
   {
     "index": 0,
@@ -1505,7 +1506,7 @@ export const BallGrids: Record<number, PrecalculatedCell[]> = {
     ],
     "isPentagon": false
   }
-],
+], */
   80: [
   {
     "index": 0,
