@@ -30,6 +30,8 @@ interface VoronoiCell {
   neighborMines: number;
 }
 
+let downX: number, downY: number = 0;
+
 class SphericalSweeper {
   private canvas: HTMLCanvasElement;
   private engine: Engine;
@@ -61,6 +63,9 @@ class SphericalSweeper {
   private revealedMat!: StandardMaterial;
   private textColors: Color3[] = [];
 
+  // Adapt mesh
+  private innerSphere!: Mesh;
+
   constructor(canvasId: string) {
     this.canvas = document.getElementById(canvasId) as HTMLCanvasElement;
     this.engine = new Engine(this.canvas, true);
@@ -85,6 +90,11 @@ class SphericalSweeper {
 
     this.sizeSelect.addEventListener('change', () => {
       this.hexagonCount = parseInt(this.sizeSelect.value);
+      if (this.hexagonCount < 80) {
+        this.innerSphere.scaling = new Vector3(0.9, 0.9, 0.9);
+      } else {
+        this.innerSphere.scaling = new Vector3(1.0, 1.0, 1.0);
+      }
       this.initGame();
     });
 
@@ -126,15 +136,18 @@ class SphericalSweeper {
     this.ballContainer.isPickable = false;
 
     // Inner dark sphere to block backfaces visible through patch gaps
-    const innerSphere = MeshBuilder.CreateSphere('innerSphere', { diameter: 3.9, segments: 32 }, this.scene);
-    innerSphere.isPickable = false;
+    this.innerSphere = MeshBuilder.CreateSphere('innerSphere', { diameter: 3.9, segments: 32 }, this.scene);
+    this.innerSphere.isPickable = false;
     const innerMat = new StandardMaterial('innerSphereMat', this.scene);
     innerMat.diffuseColor = Color3.FromHexString('#111111');
     innerMat.ambientColor = Color3.FromHexString('#111111');
     innerMat.specularColor = new Color3(0, 0, 0);
     innerMat.emissiveColor = new Color3(0, 0, 0);
     innerMat.backFaceCulling = false;
-    innerSphere.material = innerMat;
+
+    this.innerSphere.material = innerMat;
+
+    console.log(this.camera.inputs.attached);
   }
 
   private initMaterials() {
@@ -194,6 +207,12 @@ class SphericalSweeper {
     this.timerEl.textContent = '000';
     clearInterval(this.timerInterval);
 
+
+    // Clean up previous state
+    this.scene.meshes
+      .filter(mesh => mesh.name.startsWith("ind_"))
+      .forEach(mesh => mesh.dispose());
+
     // Determine mine density (approx 18% of playable cells)
     // this.totalCells = 12 + this.hexagonCount;
     this.mineCount = Math.max(3, Math.floor(this.hexagonCount * 0.18));
@@ -250,12 +269,23 @@ class SphericalSweeper {
     this.buildBallMeshes();
 
     // Interaction handler
-    this.scene.onPointerObservable.clear();
+    // this.scene.onPointerObservable.clear();
     this.scene.onPointerObservable.add((pointerInfo) => {
       if (this.gameOver) return;
 
       if (pointerInfo.type === PointerEventTypes.POINTERDOWN) {
+        downX = pointerInfo.event.clientX;
+        downY = pointerInfo.event.clientY;
+        return;
+      }
+
+      if (pointerInfo.type === PointerEventTypes.POINTERUP) {
         const event = pointerInfo.event as MouseEvent;
+
+        if (Math.abs(event.clientX - downX) > 3 ||
+            Math.abs(event.clientY - downY) > 3) {
+          return;
+        }
         
         // If pickInfo is null, perform a manual raycast pick from the event coordinates
         let pickResult = pointerInfo.pickInfo;
