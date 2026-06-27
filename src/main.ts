@@ -65,6 +65,7 @@ class SphericalSweeper {
   private mineMat!: StandardMaterial;
   private revealedMat!: StandardMaterial;
   private textColors: Color3[] = [];
+  private indMaterials: StandardMaterial[] = [];
 
   // Adapt mesh
   private innerSphere!: Mesh;
@@ -189,16 +190,29 @@ class SphericalSweeper {
       new Color3(0.2, 0.1, 0.2), // 4: Purple
       new Color3(0.2, 0.1, 0.2), // 5: Yellow
       new Color3(0.2, 0.1, 0.2), // 6: Cyan
-
-      /*
-      new Color3(0.2, 0.6, 1.0), // 1: Blue
-      new Color3(0.2, 0.8, 0.3), // 2: Green
-      new Color3(1.0, 0.3, 0.3), // 3: Red
-      new Color3(0.8, 0.3, 1.0), // 4: Purple
-      new Color3(1.0, 0.7, 0.1), // 5: Yellow
-      new Color3(0.1, 0.9, 0.9), // 6: Cyan
-      */
     ];
+
+    this.indMaterials = this.textColors.map((color, index) => {
+      // Render the number onto a dynamic texture
+      const dynTex = new DynamicTexture(`textTex_${index}`, { width: 128, height: 128 }, this.scene, false);
+      dynTex.hasAlpha = true;
+      dynTex.drawText(
+        String(index + 1),
+        null, null,
+        'bold 100px sans-serif',
+        color.toHexString(),
+        'transparent',
+        true
+      );
+
+      const indMat = new StandardMaterial(`indMat_${index}`, this.scene);
+      indMat.diffuseTexture = dynTex;
+      indMat.emissiveColor = Color3.White();
+      indMat.specularColor = Color3.Black();
+      indMat.useAlphaFromDiffuseTexture = true;
+      indMat.backFaceCulling = false;
+      return indMat;
+    });
   }
 
   private initGame() {
@@ -464,18 +478,6 @@ class SphericalSweeper {
       if (cell.neighborMines > 0) {
         const color = this.textColors[Math.min(cell.neighborMines - 1, this.textColors.length - 1)];
 
-        // Render the number onto a dynamic texture
-        const dynTex = new DynamicTexture(`textTex_${cell.index}`, { width: 128, height: 128 }, this.scene, false);
-        dynTex.hasAlpha = true;
-        dynTex.drawText(
-          String(cell.neighborMines),
-          null, null,
-          'bold 100px sans-serif',
-          color.toHexString(),
-          'transparent',
-          true
-        );
-
         // Small plane floating just above the patch, oriented to face outward
         const indicator = MeshBuilder.CreatePlane(`ind_${cell.index}`, { size: 0.28 }, this.scene);
         indicator.position = cell.center.scale(2.09);
@@ -485,14 +487,7 @@ class SphericalSweeper {
         // indicator.lookAt(cell.center.scale(100));
         indicator.parent = this.ballContainer;
         indicator.isPickable = false;
-
-        const indMat = new StandardMaterial(`indMat_${cell.index}`, this.scene);
-        indMat.diffuseTexture = dynTex;
-        indMat.emissiveColor = Color3.White();
-        indMat.specularColor = Color3.Black();
-        indMat.useAlphaFromDiffuseTexture = true;
-        indMat.backFaceCulling = false;
-        indicator.material = indMat;
+        indicator.material = this.indMaterials[cell.neighborMines - 1];
       }
     }
 

@@ -3,11 +3,12 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>World Cup Sweeper - 3D Spherical Experience</title>
+    <title>Football Sweeper</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet" />
-    <meta name="description" content="A premium 3D World Cup themed minesweeper on a spherical soccer ball built with TypeScript, Vite, and BabylonJS." />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" />
+    <meta name="description" content="A 3D football themed minesweeper on a spherical foot/soccer ball built with TypeScript, Vite, and BabylonJS." />
   </head>
   <body>
     <div id="app">
@@ -18,9 +19,9 @@
         <div class="controls-panel">
           <div class="control-item">
             <select id="size-select">
-              <option value="20">20 (Easy)</option>
-              <option value="80" selected>80 (Medium)</option>
-              <option value="180">180 (Hard)</option>
+              <option value="20">Easy</option>
+              <option value="80" selected>Medium</option>
+              <option value="180">Hard</option>
             </select>
           </div>
           <div class="status-item">
@@ -31,7 +32,14 @@
             <span class="value" id="timer">00:00</span>
             <label class="label">Time</label>
           </div>
-          <button class="btn-action" id="btn-reset">Reset Match</button>
+          <button class="btn-action" id="btn-reset">
+            <i class="fa fa-circle"></i>
+            &nbsp;Reset
+          </button>
+          <button class="btn-secondary">
+            <i class="fa-brands fa-github"></i>
+            &nbsp;GitHub
+          </button>
         </div>
       </header>
       
