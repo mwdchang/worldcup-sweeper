@@ -1,7 +1,7 @@
 :root {
   --font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
   --bg-color: #0b0f19;
-  --panel-bg: rgba(17, 24, 39, 0.7);
+  --panel-bg: rgba(57, 57, 57, 0.7);
   --panel-border: rgba(255, 255, 255, 0.08);
   --text-primary: #f3f4f6;
   --text-secondary: #9ca3af;
@@ -72,8 +72,9 @@ body {
 
 .control-item {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: flex-start;
+  margin-right: 2rem;
 }
 
 .control-item label {
@@ -101,16 +102,10 @@ body {
   border-color: var(--primary-accent);
 }
 
-.status-panel {
-  display: flex;
-  align-items: center;
-  gap: 1.5rem;
-}
-
 .status-item {
   display: flex;
-  flex-direction: column;
-  align-items: flex-end;
+  flex-direction: row; 
+  align-items: space-between;
 }
 
 .status-item .label {
@@ -118,6 +113,7 @@ body {
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: var(--text-secondary);
+  padding-left: 0.5rem;
 }
 
 .status-item .value {

@@ -13,6 +13,7 @@ import {
   PointerEventTypes,
   VertexData,
   DynamicTexture,
+  Observer
 } from '@babylonjs/core';
 import { BallGrids } from './ball';
 
@@ -31,6 +32,7 @@ interface VoronoiCell {
 }
 
 let downX: number, downY: number = 0;
+let observer: Observer<any>;
 
 class SphericalSweeper {
   private canvas: HTMLCanvasElement;
@@ -41,8 +43,9 @@ class SphericalSweeper {
 
   // Game Settings
   private hexagonCount = 80;
-  // private totalCells = 92; // 12 pentagons + H hexagons
   private mineCount = 15;
+  private flagged = 0;
+
   private cells: VoronoiCell[] = [];
   private gameOver = false;
   private revealedCount = 0;
@@ -146,8 +149,6 @@ class SphericalSweeper {
     innerMat.backFaceCulling = false;
 
     this.innerSphere.material = innerMat;
-
-    console.log(this.camera.inputs.attached);
   }
 
   private initMaterials() {
@@ -208,22 +209,27 @@ class SphericalSweeper {
     clearInterval(this.timerInterval);
 
 
-    // Clean up previous state
-    this.scene.meshes
-      .filter(mesh => mesh.name.startsWith("ind_"))
-      .forEach(mesh => mesh.dispose());
-
     // Determine mine density (approx 18% of playable cells)
     // this.totalCells = 12 + this.hexagonCount;
-    this.mineCount = Math.max(3, Math.floor(this.hexagonCount * 0.18));
-    // TODO: Testing
-    this.mineCount = 2;
-    this.mineCountEl.textContent = String(this.mineCount);
+    this.mineCount = Math.max(3, Math.floor(this.hexagonCount * 0.20));
+    this.mineCountEl.textContent = String(this.mineCount - this.flagged);
 
     // Clean up old meshes
     this.cells.forEach((cell) => {
       if (cell.mesh) cell.mesh.dispose();
     });
+
+    if (this.scene) {
+      this.scene.meshes
+        .filter(mesh => mesh.name.startsWith("ind_"))
+        .forEach(mesh => mesh.dispose());
+
+      this.scene.meshes
+        .filter(mesh => mesh.name.startsWith("cell_"))
+        .forEach(mesh => mesh.dispose());
+    }
+
+    console.log('number of meshes', this.scene.meshes.length);
 
     // Load pre-calculated grid from ball.ts
     const precalculatedData = BallGrids[this.hexagonCount];
@@ -270,7 +276,10 @@ class SphericalSweeper {
 
     // Interaction handler
     // this.scene.onPointerObservable.clear();
-    this.scene.onPointerObservable.add((pointerInfo) => {
+    if (observer) {
+      this.scene.onPointerObservable.remove(observer);
+    }
+    observer = this.scene.onPointerObservable.add((pointerInfo) => {
       if (this.gameOver) return;
 
       if (pointerInfo.type === PointerEventTypes.POINTERDOWN) {
@@ -299,7 +308,8 @@ class SphericalSweeper {
             const cellIndex = parseInt(meshName.split('_')[1]);
             const cell = this.cells[cellIndex];
 
-            if (cell.isPentagon) return; // Pentagons are unplayable
+            // Pentagons are unplayable
+            if (cell.isPentagon) return;
 
             // Start timer on first move
             if (this.timeElapsed === 0 && !this.timerInterval) {
@@ -424,10 +434,13 @@ class SphericalSweeper {
       if (cell.isFlagged) {
         cell.mesh.material = this.flaggedMat;
         cell.mesh.scaling.setAll(1.0);
+        this.flagged ++;
       } else {
         cell.mesh.material = cell.material!;
         cell.mesh.scaling.setAll(1.0);
+        this.flagged --;
       }
+      this.mineCountEl.textContent = String(this.mineCount - this.flagged);
     }
   }
 
@@ -457,7 +470,7 @@ class SphericalSweeper {
         dynTex.drawText(
           String(cell.neighborMines),
           null, null,
-          'bold 80px sans-serif',
+          'bold 100px sans-serif',
           color.toHexString(),
           'transparent',
           true
