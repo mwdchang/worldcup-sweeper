@@ -81,9 +81,9 @@ class SphericalSweeper {
     this.initGame();
     this.animate();
 
-    window.addEventListener('resize', () => {
-      this.engine.resize();
-    });
+    // window.addEventListener('resize', () => {
+    //   this.engine.resize();
+    // });
   }
 
   private initDOM() {
@@ -143,8 +143,8 @@ class SphericalSweeper {
     this.innerSphere = MeshBuilder.CreateSphere('innerSphere', { diameter: 3.9, segments: 32 }, this.scene);
     this.innerSphere.isPickable = false;
     const innerMat = new StandardMaterial('innerSphereMat', this.scene);
-    innerMat.diffuseColor = Color3.FromHexString('#111111');
-    innerMat.ambientColor = Color3.FromHexString('#111111');
+    innerMat.diffuseColor = Color3.FromHexString('#55555');
+    innerMat.ambientColor = Color3.FromHexString('#55555');
     innerMat.specularColor = new Color3(0, 0, 0);
     innerMat.emissiveColor = new Color3(0, 0, 0);
     innerMat.backFaceCulling = false;
@@ -152,8 +152,42 @@ class SphericalSweeper {
     this.innerSphere.material = innerMat;
   }
 
+
+  // Assign mines
+  private setMines(clickIdx: number):void {
+    if (!this.cells || this.cells.length <= 0) {
+      return;
+    }
+
+    const hexagons = this.cells.filter((c) => !c.isPentagon);
+    const mineIndices = new Set<number>();
+    while (mineIndices.size < this.mineCount) {
+      const idx = Math.floor(Math.random() * hexagons.length);
+      if (hexagons[idx].index === clickIdx) continue;
+      mineIndices.add(hexagons[idx].index);
+    }
+    mineIndices.forEach((idx) => {
+      this.cells[idx].isMine = true;
+    });
+
+    // Calculate neighbors and adjacent mines
+    this.cells.forEach((cell) => {
+      if (cell.isPentagon) {
+        cell.neighborMines = 0;
+        return;
+      }
+      let adjacentMines = 0;
+      cell.neighbors.forEach((nIdx) => {
+        if (this.cells[nIdx].isMine) {
+          adjacentMines++;
+        }
+      });
+      cell.neighborMines = adjacentMines;
+    });
+  }
+
   private initMaterials() {
-    // Pentagons: #555555 surface color, completely matte
+    // Pentagons
     this.pentagonMat = new StandardMaterial('pentagonMat', this.scene);
     this.pentagonMat.diffuseColor = Color3.FromHexString('#555555');
     this.pentagonMat.ambientColor = Color3.FromHexString('#555555');
@@ -161,35 +195,35 @@ class SphericalSweeper {
     this.pentagonMat.emissiveColor = new Color3(0, 0, 0);
     this.pentagonMat.roughness = 1.0;
 
-    // Flagged: Matte Gold/Orange highlight
+    // Flagged
     this.flaggedMat = new StandardMaterial('flaggedMat', this.scene);
     this.flaggedMat.diffuseColor = new Color3(1.0, 0.6, 0.0);
     this.flaggedMat.ambientColor = new Color3(1.0, 0.6, 0.0);
     this.flaggedMat.specularColor = new Color3(0, 0, 0);
     this.flaggedMat.emissiveColor = new Color3(0, 0, 0);
 
-    // Mine: Matte Red alarm
+    // Mine
     this.mineMat = new StandardMaterial('mineMat', this.scene);
     this.mineMat.diffuseColor = new Color3(0.9, 0.1, 0.1);
     this.mineMat.ambientColor = new Color3(0.9, 0.1, 0.1);
     this.mineMat.specularColor = new Color3(0, 0, 0);
     this.mineMat.emissiveColor = new Color3(0, 0, 0);
 
-    // Revealed: Matte Slate blue-gray
+    // Revealed
     this.revealedMat = new StandardMaterial('revealedMat', this.scene);
-    this.revealedMat.diffuseColor = new Color3(0.12, 0.86, 0.24);
-    this.revealedMat.ambientColor = new Color3(0.12, 0.86, 0.24);
+    this.revealedMat.diffuseColor = new Color3(0.12, 0.76, 0.24);
+    this.revealedMat.ambientColor = new Color3(0.12, 0.76, 0.24);
     this.revealedMat.specularColor = new Color3(0, 0, 0);
     this.revealedMat.emissiveColor = new Color3(0, 0, 0);
 
     // Number indicator colors
     this.textColors = [
-      new Color3(0.2, 0.1, 0.2), // 1: Blue
-      new Color3(0.2, 0.1, 0.2), // 2: Green
-      new Color3(0.2, 0.1, 0.2), // 3: Red
-      new Color3(0.2, 0.1, 0.2), // 4: Purple
-      new Color3(0.2, 0.1, 0.2), // 5: Yellow
-      new Color3(0.2, 0.1, 0.2), // 6: Cyan
+      new Color3(0.2, 0.1, 0.2),
+      new Color3(0.3, 0.1, 0.2),
+      new Color3(0.4, 0.1, 0.2),
+      new Color3(0.5, 0.1, 0.2),
+      new Color3(0.6, 0.1, 0.2),
+      new Color3(0.7, 0.1, 0.2),
     ];
 
     this.indMaterials = this.textColors.map((color, index) => {
@@ -222,10 +256,17 @@ class SphericalSweeper {
     this.timerEl.textContent = '000';
     clearInterval(this.timerInterval);
 
-
-    // Determine mine density (approx 18% of playable cells)
-    // this.totalCells = 12 + this.hexagonCount;
-    this.mineCount = Math.max(3, Math.floor(this.hexagonCount * 0.20));
+    // Determine mine density
+    let density = 0;
+    if (this.hexagonCount < 80) {
+      density = 0.15;
+    } else  if (this.hexagonCount < 180) {
+      density = 0.25;
+    } else {
+      density = 0.33;
+    }
+    
+    this.mineCount = Math.max(3, Math.floor(this.hexagonCount * density));
     this.mineCountEl.textContent = String(this.mineCount - this.flagged);
 
     // Clean up old meshes
@@ -243,9 +284,8 @@ class SphericalSweeper {
         .forEach(mesh => mesh.dispose());
     }
 
-    console.log('number of meshes', this.scene.meshes.length);
-
     // Load pre-calculated grid from ball.ts
+    
     const precalculatedData = BallGrids[this.hexagonCount];
     this.cells = precalculatedData.map(data => ({
       index: data.index,
@@ -259,38 +299,12 @@ class SphericalSweeper {
       neighborMines: 0
     }));
 
-    // Assign mines to hexagons only
-    const hexagons = this.cells.filter((c) => !c.isPentagon);
-    const mineIndices = new Set<number>();
-    while (mineIndices.size < this.mineCount) {
-      const idx = Math.floor(Math.random() * hexagons.length);
-      mineIndices.add(hexagons[idx].index);
-    }
-    mineIndices.forEach((idx) => {
-      this.cells[idx].isMine = true;
-    });
-
-    // Calculate neighbors and adjacent mines
-    this.cells.forEach((cell) => {
-      if (cell.isPentagon) {
-        cell.neighborMines = 0;
-        return;
-      }
-      let adjacentMines = 0;
-      cell.neighbors.forEach((nIdx) => {
-        if (this.cells[nIdx].isMine) {
-          adjacentMines++;
-        }
-      });
-      cell.neighborMines = adjacentMines;
-    });
-
     // Build the 3D visual panels for the cells
     this.buildBallMeshes();
 
     // Interaction handler
-    // this.scene.onPointerObservable.clear();
     if (observer) {
+      // this.scene.onPointerObservable.clear();
       this.scene.onPointerObservable.remove(observer);
     }
     observer = this.scene.onPointerObservable.add((pointerInfo) => {
@@ -327,6 +341,7 @@ class SphericalSweeper {
 
             // Start timer on first move
             if (this.timeElapsed === 0 && !this.timerInterval) {
+              this.setMines(cellIndex);
               this.startTimer();
             }
 
@@ -341,7 +356,6 @@ class SphericalSweeper {
         }
       }
     });
-
     this.canvas.addEventListener('contextmenu', (e) => e.preventDefault());
   }
 
@@ -365,7 +379,7 @@ class SphericalSweeper {
 
       // Cell geometry scaling parameters for beveling
       const radius = 2.0; // Ball radius scale
-      const gapFactor = 0.94; // Creates the lines between panels
+      const gapFactor = 0.93; // Creates the lines between panels
       const height = 0.08; // Bevel depth
 
       const center = cell.center.scale(radius * 1.02);
@@ -513,6 +527,9 @@ class SphericalSweeper {
     this.gameOver = true;
     clearInterval(this.timerInterval);
 
+    this.timerInterval = 0;
+    this.timeElapsed = 0;
+
     // Show all mine locations
     this.cells.forEach((cell) => {
       if (cell.isMine && cell.mesh) {
@@ -535,7 +552,6 @@ class SphericalSweeper {
 
   private animate() {
     this.engine.runRenderLoop(() => {
-      // Gentle camera render loop (auto-rotation disabled)
       this.scene.render();
     });
   }
