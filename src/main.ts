@@ -33,6 +33,7 @@ interface VoronoiCell {
 
 let downX: number, downY: number = 0;
 let observer: Observer<any>;
+let longPress: number = 0;
 
 class SphericalSweeper {
   private canvas: HTMLCanvasElement;
@@ -316,16 +317,19 @@ class SphericalSweeper {
       if (pointerInfo.type === PointerEventTypes.POINTERDOWN) {
         downX = pointerInfo.event.clientX;
         downY = pointerInfo.event.clientY;
+        longPress = Date.now();
         return;
       }
 
       if (pointerInfo.type === PointerEventTypes.POINTERUP) {
         const event = pointerInfo.event as MouseEvent;
 
+        // Camera dragging
         if (Math.abs(event.clientX - downX) > 3 ||
             Math.abs(event.clientY - downY) > 3) {
           return;
         }
+        const elapsed = Date.now() - longPress;
         
         // If pickInfo is null, perform a manual raycast pick from the event coordinates
         let pickResult = pointerInfo.pickInfo;
@@ -348,7 +352,7 @@ class SphericalSweeper {
               this.startTimer();
             }
 
-            if (event.button === 2) {
+            if (event.button === 2 || elapsed > 600) {
               // Right click -> Flag
               this.toggleFlag(cell);
             } else if (event.button === 0) {

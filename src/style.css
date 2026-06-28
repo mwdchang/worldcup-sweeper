@@ -55,11 +55,6 @@ body {
   gap: 0.75rem;
 }
 
-.logo h1 {
-  font-size: 1.0rem;
-  letter-spacing: -0.025em;
-}
-
 .gradient-text {
   background: var(--primary-gradient);
   -webkit-background-clip: text;
@@ -77,7 +72,7 @@ body {
   display: flex;
   flex-direction: row;
   align-items: flex-start;
-  margin-right: 2rem;
+  margin-right: 1rem;
 }
 
 .control-item label {
