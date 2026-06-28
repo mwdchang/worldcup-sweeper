@@ -58,6 +58,7 @@ class SphericalSweeper {
   private mineCountEl!: HTMLElement;
   private timerEl!: HTMLElement;
   private resetBtn!: HTMLElement;
+  private overlayEl!: HTMLElement;
 
   // Materials Cache
   private pentagonMat!: StandardMaterial;
@@ -91,6 +92,7 @@ class SphericalSweeper {
     this.mineCountEl = document.getElementById('mine-count')!;
     this.timerEl = document.getElementById('timer')!;
     this.resetBtn = document.getElementById('btn-reset')!;
+    this.overlayEl = document.getElementById('overlay')!;
 
     this.sizeSelect.addEventListener('change', () => {
       this.hexagonCount = parseInt(this.sizeSelect.value);
@@ -250,6 +252,7 @@ class SphericalSweeper {
   }
 
   private initGame() {
+    this.overlayEl!.style.display = 'none';
     this.gameOver = false;
     this.revealedCount = 0;
     this.timeElapsed = 0;
@@ -490,7 +493,7 @@ class SphericalSweeper {
 
       // Add number indicators on the sphere surface as text
       if (cell.neighborMines > 0) {
-        const color = this.textColors[Math.min(cell.neighborMines - 1, this.textColors.length - 1)];
+        // const color = this.textColors[Math.min(cell.neighborMines - 1, this.textColors.length - 1)];
 
         // Small plane floating just above the patch, oriented to face outward
         const indicator = MeshBuilder.CreatePlane(`ind_${cell.index}`, { size: 0.28 }, this.scene);
@@ -542,11 +545,11 @@ class SphericalSweeper {
     }
 
     this.endInterval = setTimeout(() => {
-      alert(
-        win
-          ? 'Winner! You swept the ball safely!'
-          : 'Red Card! You hit a soccer mine.'
-      );
+      this.overlayEl!.textContent = win
+        ? 'Winner! You swept the ball safely!'
+        : 'Red Card! You hit a soccer mine.'
+        
+      this.overlayEl!.style.display = 'block';
     }, 200);
   }
 
