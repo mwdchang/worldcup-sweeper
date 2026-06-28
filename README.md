@@ -1,2 +1,2 @@
-# worldcup sweeper
-Worldcup sweeper is a minesweeper game that takes place on the surface of a football.
+# fooball sweeper
+Fooball sweeper is a minesweeper game that takes place on the surface of a football.
