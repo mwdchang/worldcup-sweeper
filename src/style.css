@@ -185,13 +185,12 @@ body {
 #instruction {
   position: absolute;
   top: 8%;
-  left: 5%;
+  left: 3%;
   max-width: 90%;
-  min-height: 100px;
-  font-size: 0.8rem;
+  min-height: 10px;
+  font-size: 0.85rem;
   padding: 0.20rem;
   color: #bbbbbb;
-  background: rgba(25, 25, 25, 0.9);
 }
 
 

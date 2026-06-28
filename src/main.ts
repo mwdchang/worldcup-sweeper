@@ -72,6 +72,8 @@ class SphericalSweeper {
   // Adapt mesh
   private innerSphere!: Mesh;
 
+  private hasClicked = false;
+
   constructor(canvasId: string) {
     this.canvas = document.getElementById(canvasId) as HTMLCanvasElement;
     this.engine = new Engine(this.canvas, true);
@@ -258,6 +260,9 @@ class SphericalSweeper {
     this.revealedCount = 0;
     this.timeElapsed = 0;
     this.timerEl.textContent = '000';
+    this.flagged = 0;
+    this.hasClicked = false;
+
     clearInterval(this.timerInterval);
 
     // Determine mine density
@@ -347,7 +352,8 @@ class SphericalSweeper {
             if (cell.isPentagon) return;
 
             // Start timer on first move
-            if (this.timeElapsed === 0 && !this.timerInterval) {
+            if (this.hasClicked === false) {
+              this.hasClicked = true;
               this.setMines(cellIndex);
               this.startTimer();
             }
